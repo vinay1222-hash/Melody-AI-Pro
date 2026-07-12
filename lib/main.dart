@@ -1,8 +1,19 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
-import 'login_page.dart';
-import 'splash_screen.dart';
+import 'package:sqflite_common_ffi/sqflite_ffi.dart';
+
+import 'pages/login_page.dart';
+import 'pages/splash_screen.dart';
 
 void main() {
+  WidgetsFlutterBinding.ensureInitialized();
+
+  if (Platform.isWindows || Platform.isLinux) {
+    sqfliteFfiInit();
+    databaseFactory = databaseFactoryFfi;
+  }
+
   runApp(const MelodyStudioApp());
 }
 
