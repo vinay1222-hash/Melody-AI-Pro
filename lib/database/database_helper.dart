@@ -26,7 +26,7 @@ class DatabaseHelper {
 
     return await openDatabase(
       path,
-      version: 2,
+      version: 4,
       onUpgrade: (db, oldVersion, newVersion) async {
         await db.execute('''
   CREATE TABLE IF NOT EXISTS songs(
@@ -42,6 +42,8 @@ class DatabaseHelper {
     remarks TEXT
   )
   ''');
+        await _createEventMembersTable(db);
+        await _createEventAttendanceTable(db);
       },
       onCreate: _createDatabase,
     );
@@ -107,6 +109,30 @@ karaokeLink TEXT,
 youtubeLink TEXT,
 favorite INTEGER,
 remarks TEXT
+)
+''');
+    await _createEventMembersTable(db);
+    await _createEventAttendanceTable(db);
+  }
+
+  Future<void> _createEventMembersTable(Database db) async {
+    await db.execute('''
+CREATE TABLE IF NOT EXISTS event_members(
+id INTEGER PRIMARY KEY AUTOINCREMENT,
+eventId INTEGER NOT NULL,
+memberId INTEGER NOT NULL
+)
+''');
+  }
+
+  Future<void> _createEventAttendanceTable(Database db) async {
+    await db.execute('''
+CREATE TABLE IF NOT EXISTS event_attendance(
+id INTEGER PRIMARY KEY AUTOINCREMENT,
+eventId INTEGER NOT NULL,
+memberId INTEGER NOT NULL,
+present INTEGER NOT NULL,
+guestCount INTEGER NOT NULL
 )
 ''');
   }
@@ -213,6 +239,85 @@ remarks TEXT
       where: 'id = ?',
       whereArgs: [id],
     );
+  }
+
+// Get Event Member IDs
+  Future<List<int>> getEventMemberIds(int eventId) async {
+    final db = await database;
+
+    final result = await db.query(
+      'event_members',
+      columns: ['memberId'],
+      where: 'eventId = ?',
+      whereArgs: [eventId],
+    );
+
+    return result.map((e) => e['memberId'] as int).toList();
+  }
+
+// Save Event Members
+  Future<void> saveEventMembers(
+    int eventId,
+    List<int> memberIds,
+  ) async {
+    final db = await database;
+
+    await db.transaction((txn) async {
+      await txn.delete(
+        'event_members',
+        where: 'eventId = ?',
+        whereArgs: [eventId],
+      );
+
+      for (final memberId in memberIds) {
+        await txn.insert(
+          'event_members',
+          {
+            'eventId': eventId,
+            'memberId': memberId,
+          },
+        );
+      }
+    });
+  }
+
+// Get Event Attendance
+  Future<List<Map<String, dynamic>>> getEventAttendance(int eventId) async {
+    final db = await database;
+
+    return await db.query(
+      'event_attendance',
+      where: 'eventId = ?',
+      whereArgs: [eventId],
+    );
+  }
+
+// Save Event Attendance
+  Future<void> saveEventAttendance(
+    int eventId,
+    List<Map<String, dynamic>> attendanceRows,
+  ) async {
+    final db = await database;
+
+    await db.transaction((txn) async {
+      await txn.delete(
+        'event_attendance',
+        where: 'eventId = ?',
+        whereArgs: [eventId],
+      );
+
+      for (final row in attendanceRows) {
+        await txn.insert(
+          'event_attendance',
+          {
+            'eventId': eventId,
+            'memberId': row['memberId'],
+            'present': row['present'],
+            'guestCount': row['guestCount'],
+          },
+        );
+      }
+    });
   }
   // Insert Performance
   Future<int> insertPerformance(Performance performance) async {

@@ -48,6 +48,7 @@ class MemberDetailsPage extends StatelessWidget {
             Text("City : ${member.city}"),
             Text("Gender : ${member.gender}"),
             Text("Membership : ${member.membership}"),
+            const Text("Total Events Performed : 0"),
 
             const SizedBox(height: 40),
 

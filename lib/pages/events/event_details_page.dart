@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../models/event.dart';
+import 'event_members_page.dart';
+import 'event_attendance_page.dart';
 
 class EventDetailsPage extends StatelessWidget {
   final Event event;
@@ -51,6 +53,36 @@ class EventDetailsPage extends StatelessWidget {
             detail("Max Performers", event.maxPerformers.toString()),
             detail("Max Guests", event.maxGuests.toString()),
             detail("Remarks", event.remarks),
+            const SizedBox(height: 20),
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => EventMembersPage(event: event),
+                    ),
+                  );
+                },
+                child: const Text("Manage Members"),
+              ),
+            ),
+            const SizedBox(height: 10),
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => EventAttendancePage(event: event),
+                    ),
+                  );
+                },
+                child: const Text("Manage Attendance"),
+              ),
+            ),
           ],
         ),
       ),
